@@ -37,11 +37,34 @@ void setColumnsOutput(void);
 void setRowsInput(void);
 void setRowsOutput(void);
 
+//D rows
+//C columns
+
+void setColumnsOutput(void){
+    TRISC=0x00;
+    LATC=0x00;
+}
+void setRowsInput(void){
+    TRISD=0xFF;
+}
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
+    TRISB=0x00;//output
+    ANSELD=0x00;//Digital reads only
+    ANSELC=0x00;//Digital reads only
+    TRISBbits.TRISB4=1;
+    setColumnsOutput();
+    setRowsInput();
     while(1){
-    
+        if(PORTDbits.RD0==1){
+            LATBbits.LATB5=0;
+        }
+        else{
+            LATBbits.LATB5=1;
+        }
+        //LATB^=0xFF;
+        //__delay_ms(500);
     }
     return;
 }
