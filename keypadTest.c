@@ -40,6 +40,12 @@ void setRowsOutput(void);
 //D rows
 //C columns
 
+//char arrays detailing number characters
+char left[4]={'1','4','7','*'};
+char mid[4]={'2','5','8','0'};
+char right[4]={'3','6','9','#'};
+
+
 void setColumnsOutput(void){
     TRISC=0x00;
     LATC=0x00;
@@ -54,27 +60,64 @@ void setRowsOutout(void){
     TRISD=0x00;
     LATD=0x00;
 }
+char scanCols(void){
+    setColumnsInput();
+    setRowsOutout();
+    if(PORTCbits.RC0==0){
+        LATBbits.LATB5=1;
+        return 0;
+    }
+    else if(PORTCbits.RC1==0){
+        LATBbits.LATB5=1;
+        return 1;
+    }
+    else if(PORTCbits.RC2==0){
+        LATBbits.LATB5=1;
+        return 2;
+    }
+    else if(PORTCbits.RC3==0){
+        LATBbits.LATB5=1;
+        return 3;
+    }
+}
+char scan(void){
+    char colVal=0;
+    char keyVal=0xFF;
+    setColumnsOutput();
+    setRowsInput();
+    if(PORTDbits.RD0==0){
+        colVal=scanCols();
+        keyVal=left[colVal];
+    }
+    else if(PORTDbits.RD1==0){
+        colVal=scanCols();
+        keyVal=mid[colVal];
+    }
+    else if(PORTDbits.RD2==0){
+        colVal=scanCols();
+        keyVal=right[colVal];
+    }
+    else{
+        LATBbits.LATB5=0;
+    }
+    return keyVal;
+}
+
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
     TRISB=0x00;//output
-    ANSELD=0x00;//Digital reads only
+    ANSELD=0x00;//Digital reads only[]
     ANSELC=0x00;//Digital reads only
     TRISBbits.TRISB4=1;
     setColumnsOutput();
     setRowsInput();
+    char keyVal=0xFF;
     while(1){
-        setColumnsOutput();
-        setRowsInput();
-        if(PORTDbits.RD0==0){
-            setColumnsInput();
-            setRowsOutout();
-            if(PORTCbits.RC0==0){
-                LATBbits.LATB5=1;
-            }
-        }
-        else{
-            LATBbits.LATB5=0;
+        keyVal=0xFF;
+        keyVal=scan();
+        if(keyVal!=0xFF){
+            __delay_ms(100);
         }
         //LATB^=0xFF;
         //__delay_ms(500);
