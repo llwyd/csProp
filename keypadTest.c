@@ -159,7 +159,11 @@ void writeChar(char c){
     setLCD(outHigh);
     setLCD(outLow); 
 }
-
+void clearLCD(void){
+    setLCD(0b00000);
+    setLCD(0b00001);
+    //writeChar(0x02);
+}
 
 void main(void) {
     //Configure Clock 32MHz
@@ -170,8 +174,10 @@ void main(void) {
     //TRISBbits.TRISB4=1;
     setColumnsOutput();
     setRowsInput();
+    char pos=0;
     
     initialiseLCD();
+    clearLCD();
     __delay_ms(100);
     char keyVal=0xFF;
     while(1){
@@ -179,6 +185,11 @@ void main(void) {
         keyVal=scan();
         if(keyVal!=0xFF){
             writeChar(keyVal);
+            pos++;
+            if(pos==16){
+                clearLCD();
+                pos=0;
+            }
             __delay_ms(200);
         }
         //LATB^=0xFF;
