@@ -32,10 +32,22 @@
 #define _XTAL_FREQ 32000000
 
 //Function Prototypes
+
+//KeyPad
 void setColumnsInput(void);
 void setColumnsOutput(void);
 void setRowsInput(void);
 void setRowsOutput(void);
+char scanCols(void);
+char scan(void);
+//LCD
+void initialiseLCD(void);
+void lcdWrite(void);
+void writeChar(char c);
+//Piezo
+
+//DefuseButton
+
 
 //D rows
 //C columns
@@ -103,19 +115,67 @@ char scan(void){
     return keyVal;
 }
 
+
+
+void setLCD(char lcdVal){  
+    char delay=50;
+    LATBbits.LATB4=1;
+    __delay_us(delay);
+    //RS=0;
+    LATBbits.LATB5=(lcdVal&0b00010000)>>4;
+    LATBbits.LATB3=(lcdVal&0b00001000)>>3;
+    LATBbits.LATB2=(lcdVal&0b00000100)>>2;
+    LATBbits.LATB1=(lcdVal&0b00000010)>>1;
+    LATBbits.LATB0=(lcdVal&0b00000001)>>0;
+    __delay_us(delay);
+    LATBbits.LATB4=0;
+    __delay_us(delay);
+}
+
+void initialiseLCD(void){
+    //RB5=Register select (RS)
+    //RB4=Enable
+    //RB3-0 =D4-7;
+    //Initialise
+    setLCD(0b00010);
+    setLCD(0b00010);
+    setLCD(0b00000);
+    setLCD(0b01110);
+    setLCD(0b00000);
+    setLCD(0b00110);
+    
+    //Write values
+    writeChar('H');
+    writeChar('e');
+    writeChar('l');
+    writeChar('l');
+    writeChar('o');
+
+    
+}
+void writeChar(char c){
+    char outHigh=(0b10000)|(c>>4);
+    char outLow=(0b10000)|(c&0xF);
+    setLCD(outHigh);
+    setLCD(outLow); 
+}
+
+
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
     TRISB=0x00;//output
     ANSELD=0x00;//Digital reads only[]
     ANSELC=0x00;//Digital reads only
-    TRISBbits.TRISB4=1;
+    //TRISBbits.TRISB4=1;
     setColumnsOutput();
     setRowsInput();
+    
+    initialiseLCD();
     char keyVal=0xFF;
     while(1){
         keyVal=0xFF;
-        keyVal=scan();
+   //     keyVal=scan();
         if(keyVal!=0xFF){
             __delay_ms(100);
         }
