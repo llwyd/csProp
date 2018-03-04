@@ -76,19 +76,19 @@ char scanCols(void){
     setColumnsInput();
     setRowsOutout();
     if(PORTCbits.RC0==0){
-        LATBbits.LATB5=1;
+    //    LATBbits.LATB5=1;
         return 0;
     }
     else if(PORTCbits.RC1==0){
-        LATBbits.LATB5=1;
+    //    LATBbits.LATB5=1;
         return 1;
     }
     else if(PORTCbits.RC2==0){
-        LATBbits.LATB5=1;
+    //    LATBbits.LATB5=1;
         return 2;
     }
     else if(PORTCbits.RC3==0){
-        LATBbits.LATB5=1;
+    //    LATBbits.LATB5=1;
         return 3;
     }
 }
@@ -110,7 +110,7 @@ char scan(void){
         keyVal=right[colVal];
     }
     else{
-        LATBbits.LATB5=0;
+    //    LATBbits.LATB5=0;
     }
     return keyVal;
 }
@@ -145,11 +145,11 @@ void initialiseLCD(void){
     setLCD(0b00110);
     
     //Write values
-    writeChar('H');
-    writeChar('e');
-    writeChar('l');
-    writeChar('l');
-    writeChar('o');
+//    writeChar('H');
+//    writeChar('e');
+//    writeChar('l');
+//    writeChar('l');
+//    writeChar('o');
 
     
 }
@@ -172,12 +172,14 @@ void main(void) {
     setRowsInput();
     
     initialiseLCD();
+    __delay_ms(100);
     char keyVal=0xFF;
     while(1){
         keyVal=0xFF;
-   //     keyVal=scan();
+        keyVal=scan();
         if(keyVal!=0xFF){
-            __delay_ms(100);
+            writeChar(keyVal);
+            __delay_ms(200);
         }
         //LATB^=0xFF;
         //__delay_ms(500);
