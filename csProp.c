@@ -184,6 +184,7 @@ void main(void) {
         keyVal=0xFF;
         keyVal=scan();
         if(keyVal!=0xFF){
+            __nop();
             writeChar(keyVal);
             pos++;
             if(pos==16){
