@@ -46,8 +46,13 @@ void lcdWrite(void);
 void writeChar(char c);
 //Piezo
 
-//DefuseButton
+//DefuseButton?
 
+//Finite State Machine
+typedef enum{
+    INPUT,
+    TIMER,
+}state;
 
 //D rows
 //C columns
@@ -140,7 +145,7 @@ void initialiseLCD(void){
     setLCD(0b00010);
     setLCD(0b00010);
     setLCD(0b00000);
-    setLCD(0b01110);
+    setLCD(0b01100);
     setLCD(0b00000);
     setLCD(0b00110);
 }
@@ -154,43 +159,68 @@ void clearLCD(void){
     setLCD(0b00000);
     setLCD(0b00001);
 }
+void removeCursor(void){
+    setLCD(0b00000);
+    setLCD(0b01100);
+}
 
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
-    TRISB=0x00;//output
-    ANSELD=0x00;//Digital reads only[]
-    ANSELC=0x00;//Digital reads only
+    TRISB=0x00;// B OUTPUT
+    TRISA=0x00;// A Output;
+    ANSELD=0x00;//Digital reads only D
+    ANSELC=0x00;//Digital reads only C
     //TRISBbits.TRISB4=1;
     setColumnsOutput();
     setRowsInput();
     char pos=0;
-    
+    char count=0;
     initialiseLCD();
     clearLCD();
     __delay_ms(100);
+    state s=INPUT;
     char keyVal=0xFF;
     while(1){
-        keyVal=0xFF;
-        keyVal=scan();
-        if(keyVal!=0xFF){
-            //Check if activation key * has been pressed
-            if(keyVal=='*'){
-                clearLCD();
-                for (int i=0;i<pos;i++){
-                    writeChar('*');
+        switch (s)
+        {
+            case INPUT:
+                keyVal=0xFF;
+                keyVal=scan();
+                if(keyVal!=0xFF){
+                    //Check if activation key * has been pressed
+                    if(keyVal=='*'){
+                        clearLCD();
+                        for (int i=0;i<pos-1;i++){
+                            writeChar('*');
+                        }
+                        removeCursor();
+                        pos=0;
+                        s=TIMER;
+                    }
+                    writeChar(keyVal);
+                    pos++;
+                    if(pos==16){
+                        clearLCD();
+                        pos=0;
+                    }
+                    __delay_ms(200);
+                    
                 }
-            }
-            writeChar(keyVal);
-            pos++;
-            if(pos==16){
-                clearLCD();
-                pos=0;
-            }
-            __delay_ms(200);
-        }
+                break;
+            case TIMER:
+                LATAbits.LATA0^=1;
+                __delay_ms(500);
+                count++;
+                if(count==10){
+                    s=INPUT;
+                    count=0;
+                    clearLCD();
+                }   
+                break;
         //LATB^=0xFF;
         //__delay_ms(500);
+        }
     }
     return;
 }
