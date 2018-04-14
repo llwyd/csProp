@@ -7,7 +7,7 @@
 // CONFIG1
 #pragma config FOSC = INTOSC        // Oscillator Selection Bits (HS Oscillator, High-speed crystal/resonator connected between OSC1 and OSC2 pins)
 #pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
-#pragma config PWRTE = ON     // Power-up Timer Enable (PWRT disabled)
+#pragma config PWRTE = OFF     // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
 #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
 #pragma config BOREN = OFF      // Brown-out Reset Enable (Brown-out Reset disabled)
@@ -143,15 +143,6 @@ void initialiseLCD(void){
     setLCD(0b01110);
     setLCD(0b00000);
     setLCD(0b00110);
-    
-    //Write values
-//    writeChar('H');
-//    writeChar('e');
-//    writeChar('l');
-//    writeChar('l');
-//    writeChar('o');
-
-    
 }
 void writeChar(char c){
     char outHigh=(0b10000)|(c>>4);
@@ -162,7 +153,6 @@ void writeChar(char c){
 void clearLCD(void){
     setLCD(0b00000);
     setLCD(0b00001);
-    //writeChar(0x02);
 }
 
 void main(void) {
@@ -184,7 +174,13 @@ void main(void) {
         keyVal=0xFF;
         keyVal=scan();
         if(keyVal!=0xFF){
-            __nop();
+            //Check if activation key * has been pressed
+            if(keyVal=='*'){
+                clearLCD();
+                for (int i=0;i<pos;i++){
+                    writeChar('*');
+                }
+            }
             writeChar(keyVal);
             pos++;
             if(pos==16){
