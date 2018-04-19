@@ -9,8 +9,8 @@
 #pragma config WDTE = OFF       // Watchdog Timer Enable (WDT disabled)
 #pragma config PWRTE = OFF     // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
-#pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
-#pragma config BOREN = OFF      // Brown-out Reset Enable (Brown-out Reset disabled)
+#pragma config CP = OFF       // Flash Program Memory Code Protection (Program memory code protection is disabled)
+#pragma config BOREN = ON      // Brown-out Reset Enable (Brown-out Reset disabled)
 #pragma config CLKOUTEN = OFF   // Clock Out Enable (CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin)
 #pragma config IESO = ON        // Internal/External Switchover Mode (Internal/External Switchover Mode is enabled)
 #pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enable (Fail-Safe Clock Monitor is disabled)
@@ -21,8 +21,8 @@
 #pragma config ZCD = OFF        // Zero-cross detect disable (Zero-cross detect circuit is disabled at POR)
 #pragma config PLLEN = ON       // Phase Lock Loop enable (4x PLL is always enabled)
 #pragma config STVREN = ON      // Stack Overflow/Underflow Reset Enable (Stack Overflow or Underflow will cause a Reset)
-#pragma config BORV = LO        // Brown-out Reset Voltage Selection (Brown-out Reset Voltage (Vbor), low trip point selected.)
-#pragma config LPBOR = OFF      // Low-Power Brown Out Reset (Low-Power BOR is disabled)
+#pragma config BORV = HI        // Brown-out Reset Voltage Selection (Brown-out Reset Voltage (Vbor), low trip point selected.)
+#pragma config LPBOR = ON      // Low-Power Brown Out Reset (Low-Power BOR is disabled)
 #pragma config LVP = ON         // Low-Voltage Programming Enable (Low-voltage programming enabled)
 
 
@@ -62,6 +62,20 @@ char left[4]={'1','4','7','*'};
 char mid[4]={'2','5','8','0'};
 char right[4]={'3','6','9','#'};
 
+volatile char tc;
+void __interrupt(high_priority) myIsr(void)
+{
+    if (TMR0IE && TMR0IF) {
+        
+        tc++;
+                if(tc==255){
+                    tc=0;
+                    LATAbits.LATA0^=1;
+                }
+        TMR0IF=0;
+    }
+    return;
+}
 
 void setColumnsOutput(void){
     TRISC=0x00;
@@ -123,18 +137,18 @@ char scan(void){
 
 
 void setLCD(char lcdVal){  
-    char delay=50;
+    char delay=15;
     LATBbits.LATB4=1;
-    __delay_us(delay);
+    __delay_ms(delay);
     //RS=0;
     LATBbits.LATB5=(lcdVal&0b00010000)>>4;
     LATBbits.LATB3=(lcdVal&0b00001000)>>3;
     LATBbits.LATB2=(lcdVal&0b00000100)>>2;
     LATBbits.LATB1=(lcdVal&0b00000010)>>1;
     LATBbits.LATB0=(lcdVal&0b00000001)>>0;
-    __delay_us(delay);
+    __delay_ms(delay);
     LATBbits.LATB4=0;
-    __delay_us(delay);
+    __delay_ms(delay);
 }
 
 void initialiseLCD(void){
@@ -145,7 +159,7 @@ void initialiseLCD(void){
     setLCD(0b00010);
     setLCD(0b00010);
     setLCD(0b00000);
-    setLCD(0b01100);
+    setLCD(0b01110);
     setLCD(0b00000);
     setLCD(0b00110);
 }
@@ -163,11 +177,24 @@ void removeCursor(void){
     setLCD(0b00000);
     setLCD(0b01100);
 }
+void setCursor(void){
+    setLCD(0b00000);
+    setLCD(0b01110);
+}
+void configureTimer(void){
+    TMR0=0x00;
+    //enable timer 1 interrupt
+    INTCONbits.TMR0IE=1;
+    //prescalar
+    OPTION_REG=0b00000111;
+}
 
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
+    
     TRISB=0x00;// B OUTPUT
+    PORTB=0x00;
     TRISA=0x00;// A Output;
     ANSELD=0x00;//Digital reads only D
     ANSELC=0x00;//Digital reads only C
@@ -176,10 +203,17 @@ void main(void) {
     setRowsInput();
     char pos=0;
     char count=0;
+    __delay_ms(250);
+    setLCD(0b00011);
+    setLCD(0b00010);
+    __delay_ms(100);
     initialiseLCD();
     clearLCD();
     __delay_ms(100);
     state s=INPUT;
+    //enable global interrupts
+    ei();
+    configureTimer();
     char keyVal=0xFF;
     while(1){
         switch (s)
@@ -216,6 +250,7 @@ void main(void) {
                     s=INPUT;
                     count=0;
                     clearLCD();
+                    setCursor();
                 }   
                 break;
         //LATB^=0xFF;
