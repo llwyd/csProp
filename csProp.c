@@ -63,13 +63,15 @@ char mid[4]={'2','5','8','0'};
 char right[4]={'3','6','9','#'};
 
 volatile char tc;
+volatile char ticks;
 void __interrupt(high_priority) myIsr(void)
 {
     if (TMR0IE && TMR0IF) {
         
         tc++;
-                if(tc==122){
+                if(tc==61){
                     tc=0;
+                    ticks++;
                     LATAbits.LATA0^=1;
                 }
         TMR0IF=0;
@@ -184,7 +186,7 @@ void setCursor(void){
 void configureTimer(void){
     TMR0=0x00;
     //enable timer 1 interrupt
-    INTCONbits.TMR0IE=1;
+    INTCONbits.TMR0IE=0;
     //prescalar
     OPTION_REG=0b00000111;
 }
@@ -215,7 +217,8 @@ void main(void) {
     //enable global interrupts
     ei();
     configureTimer();
-//    configurePWM();
+    ticks=0;
+    //configurePWM();
     char keyVal=0xFF;
     while(1){
         switch (s)
@@ -233,6 +236,7 @@ void main(void) {
                         removeCursor();
                         pos=0;
                         s=TIMER;
+                        INTCONbits.TMR0IE=1;
                     }
                     writeChar(keyVal);
                     pos++;
@@ -245,10 +249,13 @@ void main(void) {
                 }
                 break;
             case TIMER:
-                LATAbits.LATA0^=1;
-                __delay_ms(500);
-                count++;
-                if(count==10){
+//                LATAbits.LATA0^=1;
+//                __delay_ms(500);
+//                count++;
+                
+                if(ticks==10){
+                    ticks=0;
+                    INTCONbits.TMR0IE=0;
                     s=INPUT;
                     count=0;
                     clearLCD();
