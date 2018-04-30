@@ -68,7 +68,7 @@ void __interrupt(high_priority) myIsr(void)
     if (TMR0IE && TMR0IF) {
         
         tc++;
-                if(tc==255){
+                if(tc==122){
                     tc=0;
                     LATAbits.LATA0^=1;
                 }
@@ -189,6 +189,7 @@ void configureTimer(void){
     OPTION_REG=0b00000111;
 }
 
+
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
@@ -214,6 +215,7 @@ void main(void) {
     //enable global interrupts
     ei();
     configureTimer();
+//    configurePWM();
     char keyVal=0xFF;
     while(1){
         switch (s)
