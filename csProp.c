@@ -207,17 +207,17 @@ void configurePWM(void){
     
     T2CON=0x02;
     TMR2=0x0;
-    T2PR=0x45;
+    T2PR=0x32;
     T2CLKCON=0x01;
-    //T2CONbits.CKPS=0b111;
+    T2CONbits.CKPS=0b111;
     //Turn on the timer
     T2CONbits.ON=1;
     //
     CCPTMRS2bits.P3TSEL=0b00;
     //Enable PWM3
     PWM3CONbits.POL=0;
-    PWM3DCH=0b00011111;
-    PWM3DCL=0b11000000;
+    PWM3DCH=0b00011001;
+    PWM3DCL=0b10000000;
     PWM3CONbits.EN=1;
 
 
