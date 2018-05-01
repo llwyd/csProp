@@ -17,7 +17,7 @@
 
 // CONFIG2
 #pragma config WRT = OFF        // Flash Memory Self-Write Protection (Write protection off)
-#pragma config PPS1WAY = ON     // Peripheral Pin Select one-way control (The PPSLOCK bit cannot be cleared once it is set by software)
+#pragma config PPS1WAY = OFF     // Peripheral Pin Select one-way control (The PPSLOCK bit cannot be cleared once it is set by software)
 #pragma config ZCD = OFF        // Zero-cross detect disable (Zero-cross detect circuit is disabled at POR)
 #pragma config PLLEN = ON       // Phase Lock Loop enable (4x PLL is always enabled)
 #pragma config STVREN = ON      // Stack Overflow/Underflow Reset Enable (Stack Overflow or Underflow will cause a Reset)
@@ -190,17 +190,52 @@ void configureTimer(void){
     //prescalar
     OPTION_REG=0b00000111;
 }
+void configurePWM(void){
+    //PWM3 to be used;
+    //RA1 as PWM3 out
+    GIE = 0;
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 0;
+    RA1PPS=0b011001;
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 1;
+    GIE = 1;  
+    TRISAbits.TRISA1=0;
+    //Reset Timer
+    
+    T2CON=0x02;
+    TMR2=0x0;
+    T2PR=0x45;
+    T2CLKCON=0x01;
+    //T2CONbits.CKPS=0b111;
+    //Turn on the timer
+    T2CONbits.ON=1;
+    //
+    CCPTMRS2bits.P3TSEL=0b00;
+    //Enable PWM3
+    PWM3CONbits.POL=0;
+    PWM3DCH=0b00011111;
+    PWM3DCL=0b11000000;
+    PWM3CONbits.EN=1;
+
+
+}
 
 
 void main(void) {
     //Configure Clock 32MHz
     OSCCON=0b11110000;
-    
+    //pwmRedux();
+    configurePWM();
     TRISB=0x00;// B OUTPUT
-    PORTB=0x00;
-    TRISA=0x00;// A Output;
+    //PORTB=0x00;
+    TRISAbits.TRISA0=0;
+    //TRISA=0x00;// A Output;
     ANSELD=0x00;//Digital reads only D
     ANSELC=0x00;//Digital reads only C
+    //ANSELA=0x00;
     //TRISBbits.TRISB4=1;
     setColumnsOutput();
     setRowsInput();
