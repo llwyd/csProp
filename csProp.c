@@ -73,13 +73,18 @@ void __interrupt(high_priority) myIsr(void)
         
         tc++;
         //250ms
-            if(tc==30){
+            if(tc==15){
+                //1second has elapsed
                 if(secondtick==0){
                     ticks++;
+                    if(ticks==5){
+                        modulo>>=1;
+                    }
                     if(ticks==7){
                         modulo>>=1;
                     }
                 }
+                //turn on/off piezo
                 if(microticks==0){
                     //ticks++;
                     PWM3CONbits.EN=1;
@@ -89,11 +94,11 @@ void __interrupt(high_priority) myIsr(void)
                     PWM3CONbits.EN=0;
                     LATAbits.LATA0=0;
                 }
-                tc=0;
-                
+                //update the various counters
+                tc=0;                
                 microticks++;
                 secondtick++;
-                secondtick%=4;
+                secondtick%=8;
                 microticks%=modulo;
                 
                 //LATAbits.LATA0^=1;
@@ -280,7 +285,7 @@ void main(void) {
     ticks=0;
     microticks=0;
     secondtick=0;
-    modulo=4;
+    modulo=8;
     //configurePWM();
     char keyVal=0xFF;
     while(1){
@@ -316,14 +321,14 @@ void main(void) {
 //                __delay_ms(500);
 //                count++;
                 
-                if(ticks==10){
+                if(ticks==9){
                     ticks=0;
                     INTCONbits.TMR0IE=0;
                     s=INPUT;
                     count=0;
                     microticks=0;
                     secondtick=0;
-                    modulo=4;
+                    modulo=8;
                     clearLCD();
                     setCursor();
                     PWM3CONbits.EN=0;
