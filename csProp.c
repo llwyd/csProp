@@ -64,16 +64,34 @@ char right[4]={'3','6','9','#'};
 
 volatile char tc;
 volatile char ticks;
+volatile char microticks;
+volatile char modulo;
 void __interrupt(high_priority) myIsr(void)
 {
     if (TMR0IE && TMR0IF) {
         
         tc++;
-                if(tc==61){
-                    tc=0;
+        //250ms
+            if(tc==30){
+                if(microticks==0){
                     ticks++;
-                    LATAbits.LATA0^=1;
+                    PWM3CONbits.EN=1;
+                    LATAbits.LATA0=1;
                 }
+                else{
+                    PWM3CONbits.EN=0;
+                    LATAbits.LATA0=0;
+                }
+                tc=0;
+                
+                microticks++;
+                microticks%=modulo;
+                //if(ticks==5){
+                //    modulo>>=1;
+                //}
+                //LATAbits.LATA0^=1;
+                //PWM3CONbits.EN^=1;
+            }
         TMR0IF=0;
     }
     return;
@@ -207,7 +225,7 @@ void configurePWM(void){
     
     T2CON=0x02;
     TMR2=0x0;
-    T2PR=0x32;
+    T2PR=0x28;
     T2CLKCON=0x01;
     T2CONbits.CKPS=0b111;
     //Turn on the timer
@@ -218,7 +236,7 @@ void configurePWM(void){
     PWM3CONbits.POL=0;
     PWM3DCH=0b00011001;
     PWM3DCL=0b10000000;
-    PWM3CONbits.EN=1;
+    PWM3CONbits.EN=0;
 
 
 }
@@ -253,6 +271,8 @@ void main(void) {
     ei();
     configureTimer();
     ticks=0;
+    microticks=0;
+    modulo=4;
     //configurePWM();
     char keyVal=0xFF;
     while(1){
@@ -288,13 +308,16 @@ void main(void) {
 //                __delay_ms(500);
 //                count++;
                 
-                if(ticks==10){
+                if(ticks==21){
                     ticks=0;
                     INTCONbits.TMR0IE=0;
                     s=INPUT;
                     count=0;
+                    microticks=0;
                     clearLCD();
                     setCursor();
+                    PWM3CONbits.EN=0;
+                    LATAbits.LATA0=0;
                 }   
                 break;
         //LATB^=0xFF;
