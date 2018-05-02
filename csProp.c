@@ -66,6 +66,7 @@ volatile char tc;
 volatile char ticks;
 volatile char microticks;
 volatile char modulo;
+volatile char secondtick;
 void __interrupt(high_priority) myIsr(void)
 {
     if (TMR0IE && TMR0IF) {
@@ -73,8 +74,14 @@ void __interrupt(high_priority) myIsr(void)
         tc++;
         //250ms
             if(tc==30){
-                if(microticks==0){
+                if(secondtick==0){
                     ticks++;
+                    if(ticks==7){
+                        modulo>>=1;
+                    }
+                }
+                if(microticks==0){
+                    //ticks++;
                     PWM3CONbits.EN=1;
                     LATAbits.LATA0=1;
                 }
@@ -85,10 +92,10 @@ void __interrupt(high_priority) myIsr(void)
                 tc=0;
                 
                 microticks++;
+                secondtick++;
+                secondtick%=4;
                 microticks%=modulo;
-                //if(ticks==5){
-                //    modulo>>=1;
-                //}
+                
                 //LATAbits.LATA0^=1;
                 //PWM3CONbits.EN^=1;
             }
@@ -272,6 +279,7 @@ void main(void) {
     configureTimer();
     ticks=0;
     microticks=0;
+    secondtick=0;
     modulo=4;
     //configurePWM();
     char keyVal=0xFF;
@@ -308,12 +316,14 @@ void main(void) {
 //                __delay_ms(500);
 //                count++;
                 
-                if(ticks==21){
+                if(ticks==10){
                     ticks=0;
                     INTCONbits.TMR0IE=0;
                     s=INPUT;
                     count=0;
                     microticks=0;
+                    secondtick=0;
+                    modulo=4;
                     clearLCD();
                     setCursor();
                     PWM3CONbits.EN=0;
